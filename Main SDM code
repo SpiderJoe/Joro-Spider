@@ -214,3 +214,17 @@ world_colonizing_phase125[]<-ifelse(world_colonizing_phase[] >= 0.125,1,0)
 cut_a_rug <- world_colonizing_phase75 + world_colonizing_phase50 + world_colonizing_phase25 + world_colonizing_phase125
 ccr <- colorRampPalette(c( 'grey90',"yellow","orange","red"))
 plot(cut_a_rug, col=ccr(100))
+
+
+############################################################################################################################################################################################################################
+#alternative approach using sdm (R package)
+library(sdm)
+installAll()
+
+dSz <- sdmData(species~., Cnine, predictors=sdmvars_noncol, bg = list(method='gRandom', n=10000))  
+mSz_quadratic<- sdm(species~.,dSz,methods=c('maxent'),modelSettings = list(maxent = list(feat = c("quadratic"))),replication=c('cv'), cv.folds=4,n=5,parallelSettings=list(ncore=4,method='parallel')) #Feng et al. 2019 used 4-fold CV with MaxEnt
+mSz_linear<- sdm(species~.,dSz,methods=c('maxent'),modelSettings = list(maxent = list(feat = c("linear"))),replication=c('cv'), cv.folds=4,n=5, parallelSettings=list(ncore=4,method='parallel'))
+mSz_hinge<- sdm(species~.,dSz,methods=c('maxent'),modelSettings = list(maxent = list(feat = c("hinge"))),replication=c('cv'), cv.folds=4,n=5, parallelSettings=list(ncore=4,method='parallel'))
+mSz_linquad<- sdm(species~.,dSz,methods=c('maxent'),modelSettings = list(maxent = list(feat = c("linear","quadratic"))),replication=c('cv'), cv.folds=4,n=5, parallelSettings=list(ncore=4,method='parallel'))
+mSz_linquadhinge<- sdm(species~.,dSz,methods=c('maxent'),modelSettings = list(maxent = list(feat = c("linear","quadratic","hinge"))),replication=c('cv'), cv.folds=4,n=5, parallelSettings=list(ncore=4,method='parallel'))
+eSz <- ensemble(mSz_linquadhinge, NApreds, setting=list(method='weighted', stat='AUC'), id=id)
